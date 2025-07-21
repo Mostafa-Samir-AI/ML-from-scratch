@@ -2,7 +2,7 @@ import numpy as np
 # import pandas as pd
 import matplotlib.pyplot as plt
 
-class LG:
+class LinearRegression:
     """
     Linear Regression model trained using Gradient Descent methods (BGD, SGD, MBGD).
     
@@ -193,10 +193,11 @@ class LG:
                 x_batch = x_shuffled[start:end]
                 y_batch = y_shuffled[start:end]
 
-                y_pred = np.dot(x_batch, self.w) + self.b            
+                y_pred = np.dot(x_batch, self.w) + self.b    
+                batch_length = len(x_batch)        
                 # optimization
-                dw = (1/n_samples) * np.dot(x_batch.T , (y_pred-y_batch))
-                db = (1/n_samples) * np.sum(y_pred-y_batch)
+                dw = (1/batch_length) * np.dot(x_batch.T , (y_pred-y_batch))
+                db = (1/batch_length) * np.sum(y_pred-y_batch)
 
                 # track losses per step
                 loss = self.calculate_error(y_pred , y_batch , criteria=self.track_loss)
@@ -286,3 +287,31 @@ class LG:
         plt.legend()
         plt.tight_layout()
         plt.show()
+
+
+
+# making child class to inherit from LR
+
+class PolynomialRegression(LinearRegression):
+    def __init__(self , lr=0.01 , n_iter=1000 , epoch= 5 , batch_size = 32, method = "BGD" , track_loss = "MSE"
+                  , degree = 3 , bais = False):
+            
+        self.degree = degree
+        self.bais = bais
+        super().__init__(lr , n_iter , epoch , batch_size , method , track_loss)
+    
+    # polynomail features
+    def polynomial_features(self , x , degree , bais):
+        if super().check_Dimension(x):
+            x = x.reshape(-1,1)
+        features =[np.ones_like(x)] if bais == True else []
+        for i in range(1,degree+1):
+            features.append(x**i)
+        return np.hstack(features)
+    
+    def fit(self , x_train , y_train):
+        x_poly = self.polynomial_features(x_train , self.degree , self.bais)
+        super().fit(x_poly , y_train)
+    def predict(self , x_test):
+        x_poly = self.polynomial_features(x_test , self.degree , self.bais)
+        return super().predict(x_poly)
